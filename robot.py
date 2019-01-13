@@ -2,7 +2,6 @@ from battlecode import BCAbstractRobot, SPECS
 import battlecode as bc
 import math
 import random
-import nav
 
 # __pragma__('iconv')
 # __pragma__('tconv')
