@@ -1,9 +1,11 @@
 from battlecode import BCAbstractRobot, SPECS
 import battlecode as bc
+import math
 import random
+import nav
 
-__pragma__('iconv')
-__pragma__('tconv')
+# __pragma__('iconv')
+# __pragma__('tconv')
 #__pragma__('opov')
 
 # don't try to use global variables!!
@@ -12,35 +14,215 @@ class MyRobot(BCAbstractRobot):
     crusaders = 1
     pilgrims = 1
 
+    isCrusader = False
+
+    # target location hard coded to 16,16 for now. set to None here to disable pathfinding until a target is set
+    targetLocation = (16,16)
+
+    direction_to_string = {
+        (0,0): "C",
+        (0,1): "S",
+        (1,1): "SE",
+        (1,0): "E",
+        (1,-1): "NE",
+        (0,-1): "N",
+        (-1,-1): "NW",
+        (-1,0): "W",
+        (-1,1): "SW"
+    }
+
+    string_to_direction = {
+        "C": (0,0),
+        "S": (0,1),
+        "SE": (1,1),
+        "E": (1,0),
+        "NE": (1,-1),
+        "N": (0,-1),
+        "NW": (-1,-1),
+        "W": (-1,0),
+        "SW": (-1,1)
+    }
+
+    # rotation values are strings because Python cannot easily get the index of a list of Tuples
+    rotate_ccw = ["S", "SE", "E", "NE", "N", "NW", "W", "SW"]
+    rotate_cw = ["S", "SW", "W", "NW", "N", "NE", "E", "SE"]
+
     def turn(self):
         self.step += 1
-        self.log("START TURN " + self.step)
-        if self.me['unit'] == SPECS['CRUSADER']:
-            self.log("Crusader health: " + str(self.me['health']))
-            # The directions: North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
-            choices = [(0,-1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
-            choice = random.choice(choices)
-            self.log('TRYING TO MOVE IN DIRECTION ' + str(choice))
-            return self.move(*choice)
 
-        elif self.me['unit'] == SPECS['CASTLE']:
-            if self.step < 20:
-                randir = [-1, 0, 1]
-                firstdir = random.choice(randir)
-                seconddir = random.choice(randir)
-                if self.crusaders / self.pilgrims <= .5:
-                    self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                    return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
+        if self.step % 1 == 0:
+            self.log("START TURN " + self.step)
+
+            if self.me['unit'] == SPECS['CRUSADER']:
+                if not self.isCrusader:
+                    self.isCrusader = True
+
+                self.log("Crusader health: " + str(self.me['health']))
+                
+                # move to target if possible
+                movement = self.getMovement()
+                if movement != (0,0):
+                    self.log("Moving in direction: " + str(movement))
+                    return self.move(*movement)
+
+            if self.me['unit'] == SPECS['CASTLE']:
+                if self.step < 20:
+                    randir = [-1, 0, 1]
+                    firstdir = random.choice(randir)
+                    seconddir = random.choice(randir)
+                    if self.crusaders / self.pilgrims <= .5:
+                        self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        self.crusaders += 1
+                        return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
+                    else:
+                        self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        self.pilgrims += 1
+                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
                 else:
-                    self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                    return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
-            else:
-                self.log("Castle health: " + self.me['health'])
+                    self.log("Castle health: " + self.me['health'])
+                    pass
+            
+            elif self.me['unit'] == SPECS['PILGRIM']:
+                # move to target if possible
+                movement = self.getMovement()
+                if movement != (0,0):
+                    self.log("Moving in direction: " + str(movement))
+                    return self.move(*movement)
+        else:
+            return False
+
+    # will return (0,0) if there is no target location set, no available spaces within movement range, or if robot is already at the target location
+    def getMovement(self):
+        currentLocation = (self.me['x'], self.me['y'])
+        directionalMovement = (0,0)
+
+        if self.targetLocation and not currentLocation == self.targetLocation:
+
+            direction = self.getDirection(currentLocation, self.targetLocation)
+            directionalMovement = self.getDirectionalMovement(currentLocation, direction)
+            newLocation = self.getNewLocation(currentLocation, directionalMovement)
+            initialDirection = direction
+            readyToMove = True
+
+            while not self.isPassable(newLocation):
+                # rotate the robots direction clockwise and proceed
+                #TO DO determine when it makes more sense to go clockwise vs counter clockwise
+                direction = self.getRotatedDirection(direction, 1)
+
+                if direction == initialDirection:
+                    self.log("Was unable to find a direction to move in")
+                    readyToMove = False
+                    break
+
+                directionalMovement = self.getDirectionalMovement(currentLocation, direction)
+                newLocation = self.getNewLocation(currentLocation, directionalMovement)
+
+            if not readyToMove:
+                directionalMovement = (0,0)
+
+        return directionalMovement
+
+    def getDirection(self, location, target):
+        # get direction to target
+        dx = target[0] - location[0]
+        dy = target[1] - location[1]
+
+        if dx < 0:
+            dx = -1
+        elif dx > 0:
+            dx = 1
+
+        if dy < 0:
+            dy = -1
+        if dy > 0:
+            dy = 1
+
+        return (dx, dy)
+
+    def getDirectionalMovement(self, currentLocation, direction):
+        # get directional movement allowed towards target        
+        if self.isCrusader:
+            singleLineMovementSpeed = 3
+            diagonalMovementSpeed = 2
+        else:
+            singleLineMovementSpeed = 2
+            diagonalMovementSpeed = 1
+
+        xDirectionalMovement = direction[0]
+        yDirectionalMovement = direction[1]
+
+        if xDirectionalMovement != 0 and yDirectionalMovement != 0:
+            xDirectionalMovement *= diagonalMovementSpeed
+            yDirectionalMovement *= diagonalMovementSpeed
+        else:
+            xDirectionalMovement *= singleLineMovementSpeed
+            yDirectionalMovement *= singleLineMovementSpeed
+
+        # limit the directional movement if target is closer than max movement range
+        xOffset = self.targetLocation[0] - currentLocation[0]
+        yOffset = self.targetLocation[1] - currentLocation[1]
+
+        if self.isCrusader:
+            # TO DO Add logic to enhance Crusader movements
+            pass
+        else:
+            if xDirectionalMovement != 0:
+                directionalMovement = (xDirectionalMovement, yDirectionalMovement)
+                xDirectionalMovement = self.checkForShorterAxisMovement(xOffset, xDirectionalMovement, directionalMovement, currentLocation)
+                    
+            if yDirectionalMovement != 0:
+                directionalMovement = (xDirectionalMovement, yDirectionalMovement)
+                yDirectionalMovement = self.checkForShorterAxisMovement(yOffset, yDirectionalMovement, directionalMovement, currentLocation)                
+
+        return (xDirectionalMovement, yDirectionalMovement)
+
+    def checkForShorterAxisMovement(self, Offset, axisDirectionalMovement, directionalMovement, currentLocation):
+        # shorten directional movement by single increment if possible
+        if Offset == 1 or Offset == -1:
+            axisDirectionalMovement = Offset                                
+        elif axisDirectionalMovement > 1:
+            newLocation = self.getNewLocation(currentLocation, directionalMovement)
+            if not self.isPassable(newLocation):
+                axisDirectionalMovement = 1
+        elif axisDirectionalMovement < -1:
+            newLocation = self.getNewLocation(currentLocation, directionalMovement)
+            if not self.isPassable(newLocation):
+                axisDirectionalMovement = -1
         
-        elif self.me['unit'] ==SPECS['PILGRIM']:
-            choices = [(0,-1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
-            choice = random.choice(choices)
-            self.log('TRYING TO MOVE IN DIRECTION ' + str(choice))
-            return self.move(*choice)
+        return axisDirectionalMovement
+
+    def getNewLocation(self, currentLocation, directionalMovement):
+        x = currentLocation[0] + directionalMovement[0]
+        y = currentLocation[1] + directionalMovement[1]
+        return (x, y)
+
+    def isPassable(self, newLocation):
+        passable = True
+
+        if newLocation[0] < 0 or newLocation[0] > len(self.map):
+            passable = False
+        elif newLocation[1] < 0 or newLocation[1] > len(self.map):
+            passable = False
+        elif not self.map[newLocation[1]][newLocation[0]]:
+            passable = False
+        elif self.get_visible_robot_map()[newLocation[1]][newLocation[0]] > 0:
+            passable = False
+
+        return passable
+
+    def getRotatedDirection(self, direction, amount, clockwise=True):
+        #rotate direction
+        directionString = self.direction_to_string[direction]
+
+        if clockwise:
+            rotatedDirectionString = self.rotate_cw[(self.rotate_cw.index(directionString) + amount) % 8]
+        else:
+            rotatedDirectionString = self.rotate_ccw[(self.rotate_cw.index(directionString) + amount) % 8]
+
+        rotatedDirection = self.string_to_direction[rotatedDirectionString]
+
+        return rotatedDirection
+
+        
 
 robot = MyRobot()
