@@ -46,22 +46,35 @@ class MyRobot(BCAbstractRobot):
     rotate_ccw = ["S", "SE", "E", "NE", "N", "NW", "W", "SW"]
     rotate_cw = ["S", "SW", "W", "NW", "N", "NE", "E", "SE"]
 
+    # robot min/max attack ranges
+    attackRanges = {'crusaderMin': 1, 'crusaderMax': 16, 'prophetMin': 16, 'prophetMax': 64, 'preacherMin': 1, 'preacherMax': 16 }
+
     def turn(self):
         self.step += 1
 
+
         if self.step % 1 == 0:
-            self.log("START TURN " + self.step)
+            #self.log("START TURN " + self.step)
 
             if self.me['unit'] == SPECS['CRUSADER']:
                 if not self.isCrusader:
                     self.isCrusader = True
 
-                self.log("Crusader health: " + str(self.me['health']))
-                
+            #    self.log("Crusader health: " + str(self.me['health']))
+
+                # Attack closest target if possible
+                targets = self.getTargetRobots()
+                if len(targets) > 0:
+                    target = self.findClosestTarget(targets)
+                    engage = self.engageEnemyRobots(target)
+                    if engage:
+                        self.log("engaging robot " + str(target['bot']))
+                        return self.attack(self.me.x - target['location']['x'], self.me.y - target['location']['y'])
+
                 # move to target if possible
                 movement = self.getMovement()
                 if movement != (0,0):
-                    self.log("Moving in direction: " + str(movement))
+                  #  self.log("Moving in direction: " + str(movement))
                     return self.move(*movement)
 
             if self.me['unit'] == SPECS['CASTLE']:
@@ -70,22 +83,22 @@ class MyRobot(BCAbstractRobot):
                     firstdir = random.choice(randir)
                     seconddir = random.choice(randir)
                     if self.crusaders / self.pilgrims <= .5:
-                        self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                       # self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.crusaders += 1
                         return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
                     else:
-                        self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                     #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.pilgrims += 1
                         return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
                 else:
-                    self.log("Castle health: " + self.me['health'])
+                  #  self.log("Castle health: " + self.me['health'])
                     pass
             
             elif self.me['unit'] == SPECS['PILGRIM']:
                 # move to target if possible
                 movement = self.getMovement()
                 if movement != (0,0):
-                    self.log("Moving in direction: " + str(movement))
+                  #  self.log("Moving in direction: " + str(movement))
                     return self.move(*movement)
         else:
             return False
@@ -109,7 +122,7 @@ class MyRobot(BCAbstractRobot):
                 direction = self.getRotatedDirection(direction, 1)
 
                 if direction == initialDirection:
-                    self.log("Was unable to find a direction to move in")
+                 #   self.log("Was unable to find a direction to move in")
                     readyToMove = False
                     break
 
@@ -222,6 +235,52 @@ class MyRobot(BCAbstractRobot):
 
         return rotatedDirection
 
-        
+    def getTargetRobots(self):
+        """will return a list of visable enemy robots."""
+        self.log("find targets")
+        robots = self.get_visible_robots()
+        enemyRobots = []
+        if len(robots) > 0:
+            for bot in robots:
+                self.log("target bot team " + str(bot.team))
+                self.log("my team " + str(self.me['team']))
+                if bot.team != self.me['team']:
+                    self.log("adding bot to enemy list")
+                    enemyRobots.append(bot)
+        return enemyRobots
+
+    def getRangeToTarget(self, startPosition, targetPosition):
+        """will return the radius squared distance |X1-X2|^2 + |Y1-Y2|^2 from the startPosition {'x': 1, 'y': 2} to the TargetPosition {'x': 4, 'y': 9}"""
+        return abs(startPosition['x'] - targetPosition['x'])**2 + abs(startPosition['y']-targetPosition['y'])**2
+
+    def findClosestTarget(self, enemyRobots):
+        """will return the closest robot in the list of robots"""
+        self.log("finding closest target")
+        closest = {'target': None}
+        myLoc = {'x': self.me.x, 'y': self.me.y}
+        for bot in enemyRobots:
+            enemyLoc = {'x':bot.x, 'y': bot.y}
+            distance = self.getRangeToTarget(myLoc, enemyLoc)
+            if closest['target'] is None:
+                closest['target'] = bot 
+                closest['distance'] = distance
+                closest['location'] = enemyLoc
+            else:
+                if distance < closest['distance']:
+                    closest['target'] = bot
+                    closest['distance'] = distance
+                    closest['location'] = enemyLoc
+        self.log(str(closest['target']))
+        self.log(str(closest['distance']))
+        return closest
+
+    def engageEnemyRobots(self, targetRobot):
+        """Will engage the enemy if it is within robots range."""
+        self.log("engaging enemys")
+        enemyEngaged = False
+        if self.me['unit'] == SPECS['CRUSADER']:
+            if  self.attackRanges['crusaderMin'] <= targetRobot['distance'] <= self.attackRanges['crusaderMax']: 
+                enemyEngaged = True
+        return enemyEngaged
 
 robot = MyRobot()
