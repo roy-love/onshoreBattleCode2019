@@ -12,6 +12,9 @@ class MyRobot(BCAbstractRobot):
     step = -1
     crusaders = 1
     pilgrims = 1
+    prophets = 1
+
+    mapLength = 0
 
     isCrusader = False
 
@@ -49,6 +52,9 @@ class MyRobot(BCAbstractRobot):
     def turn(self):
         self.step += 1
 
+        if self.step == 1:
+            self.mapLength = len(self.map)
+
         if self.step % 1 == 0:
             self.log("START TURN " + self.step)
 
@@ -64,7 +70,7 @@ class MyRobot(BCAbstractRobot):
                     self.log("Moving in direction: " + str(movement))
                     return self.move(*movement)
 
-            if self.me['unit'] == SPECS['CASTLE']:
+            elif self.me['unit'] == SPECS['CASTLE']:
                 if self.step < 20:
                     randir = [-1, 0, 1]
                     firstdir = random.choice(randir)
@@ -73,6 +79,10 @@ class MyRobot(BCAbstractRobot):
                         self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.crusaders += 1
                         return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
+                    elif self.prophets <= 1:
+                        self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        self.prophets += 1
+                        return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
                     else:
                         self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.pilgrims += 1
@@ -87,8 +97,26 @@ class MyRobot(BCAbstractRobot):
                 if movement != (0,0):
                     self.log("Moving in direction: " + str(movement))
                     return self.move(*movement)
+
+            elif self.me['unit'] == SPECS['PROPHET']:
+                if self.step == 1:
+                    currentLocation = (self.me['x'], self.me['y'])
+                    centerPoint = math.ceil(self.mapLength / 2)
+                    centerLocation = (centerPoint, centerPoint)
+                    direction = self.getDirection(currentLocation, centerLocation)
+                    self.targetLocation = self.getTargetInDirection(currentLocation, direction, 5)
+                # move to target if possible
+                movement = self.getMovement()
+                if movement != (0,0):
+                    self.log("Moving in direction: " + str(movement))
+                    return self.move(*movement)
         else:
             return False
+
+    def getTargetInDirection(self, location, direction, amount):
+        x = location[0] + direction[0] * amount
+        y = location[1] + direction[1] * amount
+        return (x, y)
 
     # will return (0,0) if there is no target location set, no available spaces within movement range, or if robot is already at the target location
     def getMovement(self):
@@ -133,7 +161,7 @@ class MyRobot(BCAbstractRobot):
 
         if dy < 0:
             dy = -1
-        if dy > 0:
+        elif dy > 0:
             dy = 1
 
         return (dx, dy)
