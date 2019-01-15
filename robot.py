@@ -15,6 +15,8 @@ class MyRobot(BCAbstractRobot):
     prophets = 1
 
     mapLength = 0
+    mapHeight = 0
+    defenceGrid = []
 
     isCrusader = False
 
@@ -326,7 +328,7 @@ class MyRobot(BCAbstractRobot):
         """will return the closest robot in the list of robots"""
         self.log("finding closest target")
         closest = {'target': None}
-        myLoc = {'x': self.me.x, 'y': self.me.y}
+        myLoc = {'x': self.me['x'], 'y': self.me['y']}
         for bot in enemyRobots:
             enemyLoc = {'x':bot.x, 'y': bot.y}
             distance = self.getRangeToTarget(myLoc, enemyLoc)
@@ -351,7 +353,42 @@ class MyRobot(BCAbstractRobot):
             enemyEngaged = True
         return enemyEngaged
 
-    #def setDefenseGrid(self):
+    def setDefenseGrid(self):
+        horizontal = -2
+        vertical = 2
+        if self.me.x < self.mapHeight - self.me['x']:
+            horizontal = 2
+        if self.me.y < self.mapLength - self.me['y']:
+            vertical = 2
+        gridSize = 2
+        x = self.me['x']
+        y = self.me['y']
+        maxX = x + 10
+        minX = x - 10
+        maxY = y + 10
+        minY = y - 10
+        if maxX > self.mapHeight:
+            maxX = self.mapHeight
+        if minX < 0:
+            minX = 0
+        if maxY > self.mapLength:
+            maxY = self.mapLength
+        if minY < 0:
+            minY = 0
+        while gridSize < 20:
+            x = minX + horizontal
+            horizontal += horizontal
+            yGrid = 2
+            while yGrid < 20:
+                newVertical = vertical
+                y = minY + newVertical
+                self.defenceGrid.append((x,y))
+                yGrid += 2
+                newVertical += vertical
+            gridSize += 2
+
+    def getStation(self):
+        return random.choice(self.defenceGrid)
 
 
 
