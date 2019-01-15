@@ -74,8 +74,8 @@ class MyRobot(BCAbstractRobot):
             # self.log("START STEP " + self.step)
 
             if self.me['unit'] == SPECS['CRUSADER']:
-                if self.step == 0:
-                    self.targetLocation = (16,16)
+                #if self.step == 0:
+                    #self.targetLocation = (16,16)
 
                 if not self.isCrusader:
                     self.isCrusader = True
@@ -88,7 +88,7 @@ class MyRobot(BCAbstractRobot):
                     target = self.findClosestTarget(targets)
                     engage = self.engageEnemyRobots(target)
                     if engage:
-                        self.log("engaging robot " + str(target['bot']['id']))
+                        self.log("engaging robot " + str(target['bot']))
                         return self.attack(target['location']['x'] - self.me.x, target['location']['y'] - self.me.y)
 
                 # move to target if possible
@@ -98,22 +98,22 @@ class MyRobot(BCAbstractRobot):
                     return self.move(*movement)
 
             elif self.me['unit'] == SPECS['CASTLE']:
-                if self.step < 20:
+                if self.karbonite >= 20:
                     randir = [-1, 0, 1]
                     firstdir = random.choice(randir)
                     seconddir = random.choice(randir)
                     if self.crusaders / self.pilgrims <= .5:
                        # self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.crusaders += 1
-                        return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
-                    elif self.prophets <= 1:
+                        self.pilgrims += 1
+                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
+                    elif self.prophets <= 5:
                         self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.prophets += 1
                         return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
                     else:
                      #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.pilgrims += 1
-                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
+                        self.crusaders += 1
+                        return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
                 else:
                   #  self.log("Castle health: " + self.me['health'])
                     pass
@@ -171,7 +171,15 @@ class MyRobot(BCAbstractRobot):
                     centerPoint = math.ceil(self.mapLength / 2)
                     centerLocation = (centerPoint, centerPoint)
                     direction = self.getDirection(currentLocation, centerLocation)
-                    self.targetLocation = self.getTargetInDirection(currentLocation, direction, 5)
+                    #self.targetLocation = self.getTargetInDirection(currentLocation, direction, 5)
+                # Attack closest target if possible
+                targets = self.getTargetRobots()
+                if len(targets) > 0:
+                    target = self.findClosestTarget(targets)
+                    engage = self.engageEnemyRobots(target)
+                    if engage:
+                        self.log("engaging robot " + str(target['target']['id']))
+                        return self.attack(target['location']['x'] - self.me['x'], target['location']['y'] - self.me['y'])
                 # move to target if possible
                 movement = self.getMovement()
                 if movement != (0,0):
@@ -454,8 +462,8 @@ class MyRobot(BCAbstractRobot):
                 self.defenceGrid.append((x,y))
                 yGrid += 2
                 newVertical += 2
-        self.log("Final Gridsizes " + str(gridSize) + ' ' + yGrid)
-        self.log("Defense Grid " + str(self.defenceGrid))
+        #self.log("Final Gridsizes " + str(gridSize) + ' ' + yGrid)
+        #self.log("Defense Grid " + str(self.defenceGrid))
 
     def getStation(self):
         return random.choice(self.defenceGrid)
