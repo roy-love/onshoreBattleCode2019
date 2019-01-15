@@ -100,13 +100,17 @@ class MyRobot(BCAbstractRobot):
             elif self.me['unit'] == SPECS['CASTLE']:
                 if self.karbonite >= 20:
                     randir = [-1, 0, 1]
+                    ranChance = [False, True]
                     firstdir = random.choice(randir)
                     seconddir = random.choice(randir)
-                    if self.crusaders / self.pilgrims <= .5:
+                    if self.pilgrims < 3: 
+                        self.pilgrims += 1
+                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
+                    if self.crusaders / self.pilgrims >= .5:
                        # self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.pilgrims += 1
                         return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
-                    elif self.prophets <= 5:
+                    elif random.choice(ranChance):
                         self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.prophets += 1
                         return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
