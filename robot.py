@@ -63,15 +63,12 @@ class MyRobot(BCAbstractRobot):
         if self.step == 0:
             self.mapLength = len(self.map)
             self.mapHeight = len(self.map[0])
-<<<<<<< HEAD
             self.log("map length is " + str(self.mapLength) + " map height is " + str(self.mapHeight))
             self.setDefenseGrid()
             self.targetLocation = self.getStation()
             self.log("my station is " + str(self.targetLocation))
 
-=======
             # self.log("map length is " + str(self.mapLength) + " map height is " + str(self.mapHeight))
->>>>>>> e5969e831453913c359345d6ba7b7689468e1b5a
 
         if self.step % 1 == 0:
             # self.log("START STEP " + self.step)
@@ -446,9 +443,6 @@ class MyRobot(BCAbstractRobot):
             minY = 0
             newHorizontal = horizontal
         while gridSize < 20:
-            #self.log("minx is " + str(minY))
-            #self.log("hor is " + str(horizontal))
-            #self.log("new hor is " + str(newHorizontal))
             x = (minX + newHorizontal)
             #self.log("x is " + str(x))
             newHorizontal += horizontal
