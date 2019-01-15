@@ -178,7 +178,7 @@ class MyRobot(BCAbstractRobot):
                     target = self.findClosestTarget(targets)
                     engage = self.engageEnemyRobots(target)
                     if engage:
-                        self.log("engaging robot " + str(target['target']['id']))
+                        #self.log("engaging robot " + str(target['target']['id']))
                         return self.attack(target['location']['x'] - self.me['x'], target['location']['y'] - self.me['y'])
                 # move to target if possible
                 movement = self.getMovement()
@@ -404,7 +404,7 @@ class MyRobot(BCAbstractRobot):
         closest = {'target': None}
         myLoc = {'x': self.me['x'], 'y': self.me['y']}
         for bot in enemyRobots:
-            enemyLoc = {'x':bot.x, 'y': bot.y}
+            enemyLoc = {'x':bot['x'], 'y': bot['y']}
             distance = self.getRangeToTarget(myLoc, enemyLoc)
             if closest['target'] is None:
                 closest['target'] = bot 
@@ -459,11 +459,12 @@ class MyRobot(BCAbstractRobot):
             newVertical = vertical
             while yGrid < 20:
                 y = (minY + newVertical)
-                self.defenceGrid.append((x,y))
+                if x == x:
+                    self.defenceGrid.append((x,y))
                 yGrid += 2
                 newVertical += 2
         #self.log("Final Gridsizes " + str(gridSize) + ' ' + yGrid)
-        #self.log("Defense Grid " + str(self.defenceGrid))
+        self.log("Defense Grid " + str(self.defenceGrid))
 
     def getStation(self):
         return random.choice(self.defenceGrid)
