@@ -57,6 +57,8 @@ class MyRobot(BCAbstractRobot):
 
         if self.step == 1:
             self.mapLength = len(self.map)
+            self.mapHeight = len(self.map[0])
+            self.log("map length is " + str(self.mapLength) + " map height is " + str(self.mapHeight))
 
         if self.step % 1 == 0:
             # self.log("START STEP " + self.step)
@@ -348,5 +350,9 @@ class MyRobot(BCAbstractRobot):
         if  SPECS.UNITS[self.me.unit].ATTACK_RADIUS[0] <= targetRobot['distance'] <= SPECS.UNITS[self.me.unit].ATTACK_RADIUS[1]: 
             enemyEngaged = True
         return enemyEngaged
+
+    #def setDefenseGrid(self):
+
+
 
 robot = MyRobot()
