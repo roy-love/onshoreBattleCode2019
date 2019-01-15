@@ -61,6 +61,10 @@ class MyRobot(BCAbstractRobot):
             self.mapLength = len(self.map)
             self.mapHeight = len(self.map[0])
             self.log("map length is " + str(self.mapLength) + " map height is " + str(self.mapHeight))
+            self.setDefenseGrid()
+            self.targetLocation = self.getStation()
+            self.log("my station is " + str(self.targetLocation))
+
 
         if self.step % 1 == 0:
             # self.log("START STEP " + self.step)
@@ -77,7 +81,7 @@ class MyRobot(BCAbstractRobot):
                     target = self.findClosestTarget(targets)
                     engage = self.engageEnemyRobots(target)
                     if engage:
-                        self.log("engaging robot " + str(target['bot']))
+                        self.log("engaging robot " + str(target['bot']['id']))
                         return self.attack(target['location']['x'] - self.me.x, target['location']['y'] - self.me.y)
 
                 # move to target if possible
@@ -308,14 +312,14 @@ class MyRobot(BCAbstractRobot):
 
     def getTargetRobots(self):
         """will return a list of visable enemy robots."""
-        self.log("find targets")
+        #self.log("find targets")
         robots = self.get_visible_robots()
         enemyRobots = []
         if len(robots) > 0:
             for bot in robots:
-                self.log("target bot team " + str(bot.team))
-                self.log("my team " + str(self.me['team']))
-                if bot.team != self.me['team']:
+                #self.log("target bot team " + str(bot['team']))
+                #self.log("my team " + str(self.me['team']))
+                if bot['team'] != self.me['team']:
                     self.log("adding bot to enemy list")
                     enemyRobots.append(bot)
         return enemyRobots
@@ -326,7 +330,7 @@ class MyRobot(BCAbstractRobot):
 
     def findClosestTarget(self, enemyRobots):
         """will return the closest robot in the list of robots"""
-        self.log("finding closest target")
+        #self.log("finding closest target")
         closest = {'target': None}
         myLoc = {'x': self.me['x'], 'y': self.me['y']}
         for bot in enemyRobots:
@@ -347,7 +351,7 @@ class MyRobot(BCAbstractRobot):
 
     def engageEnemyRobots(self, targetRobot):
         """Will engage the enemy if it is within robots range."""
-        self.log("engaging enemys")
+        #self.log("engaging enemys")
         enemyEngaged = False
         if  SPECS.UNITS[self.me.unit].ATTACK_RADIUS[0] <= targetRobot['distance'] <= SPECS.UNITS[self.me.unit].ATTACK_RADIUS[1]: 
             enemyEngaged = True
@@ -355,7 +359,7 @@ class MyRobot(BCAbstractRobot):
 
     def setDefenseGrid(self):
         horizontal = -2
-        vertical = 2
+        vertical = -2
         if self.me.x < self.mapHeight - self.me['x']:
             horizontal = 2
         if self.me.y < self.mapLength - self.me['y']:
@@ -375,17 +379,24 @@ class MyRobot(BCAbstractRobot):
             maxY = self.mapLength
         if minY < 0:
             minY = 0
+            newHorizontal = horizontal
         while gridSize < 20:
-            x = minX + horizontal
-            horizontal += horizontal
+            #self.log("minx is " + str(minY))
+            #self.log("hor is " + str(horizontal))
+            #self.log("new hor is " + str(newHorizontal))
+            x = (minX + newHorizontal)
+            #self.log("x is " + str(x))
+            newHorizontal += horizontal
             yGrid = 2
+            gridSize += 2
+            newVertical = vertical
             while yGrid < 20:
-                newVertical = vertical
-                y = minY + newVertical
+                y = (minY + newVertical)
                 self.defenceGrid.append((x,y))
                 yGrid += 2
-                newVertical += vertical
-            gridSize += 2
+                newVertical += 2
+        self.log("Final Gridsizes " + str(gridSize) + ' ' + yGrid)
+        self.log("Defense Grid " + str(self.defenceGrid))
 
     def getStation(self):
         return random.choice(self.defenceGrid)
