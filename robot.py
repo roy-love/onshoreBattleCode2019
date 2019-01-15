@@ -77,6 +77,11 @@ class MyRobot(BCAbstractRobot):
             # self.log("START STEP " + self.step)
 
             if self.me['unit'] == SPECS['CRUSADER']:
+                        # ensure that target location is not none and not equal to the current location
+                myCurrentLocation = (self.me['x'], self.me['y'])
+                if not (self.targetLocation and not myCurrentLocation == self.targetLocation):
+                    self.log("Setting new target because old one was bad")
+                    self.targetLocation = self.getRandomPassableLocation()
 
                 if not self.isCrusader:
                     self.isCrusader = True
@@ -105,7 +110,11 @@ class MyRobot(BCAbstractRobot):
                     ranChance = [False, True]
                     firstdir = random.choice(randir)
                     seconddir = random.choice(randir)
-                    if self.crusaders / self.pilgrims <= .5:
+                    if self.pilgrims <= 2:
+                     #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        self.pilgrims += 1
+                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
+                    elif self.crusaders / self.pilgrims <= .5:
                        # self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.crusaders += 1
                         return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
@@ -113,14 +122,10 @@ class MyRobot(BCAbstractRobot):
                         # self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.prophets += 1
                         return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
-                    elif self.pilgrims <= 3:
+                    else:
                      #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.pilgrims += 1
                         return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
-                    else:
-                     #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.prophets += 1
-                        return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
                 else:
                   #  self.log("Castle health: " + self.me['health'])
                     pass
@@ -188,6 +193,10 @@ class MyRobot(BCAbstractRobot):
                         return self.move(*movement)
 
             elif self.me['unit'] == SPECS['PROPHET']:
+                myCurrentLocation = (self.me['x'], self.me['y'])
+                if not (self.targetLocation and not myCurrentLocation == self.targetLocation):
+                    self.log("Setting new target because old one was bad")
+                    self.targetLocation = self.getRandomPassableLocation()
                 if self.step == 0:
                     currentLocation = (self.me['x'], self.me['y'])
                     centerPoint = math.ceil(self.mapLength / 2)
@@ -281,7 +290,8 @@ class MyRobot(BCAbstractRobot):
             if not readyToMove:
                 # change the directional movement back to (0,0) so that it doesn't move
                 directionalMovement = (0,0)
-
+        else :
+            self.targetLocation = self.getRandomPassableLocation()
         # return the directional movement
         return directionalMovement
 
@@ -489,7 +499,7 @@ class MyRobot(BCAbstractRobot):
             self.log("New Horizontal is ************************ " + str(newHorizontal))
         while gridSize < 10:
             self.log("minx is " + str(minX))
-            self.log("newHorizontal is " + str(newHorizontal))
+            self.log("newHorizontal 2 is " + str(newHorizontal))
             x = (minX + newHorizontal)
             #self.log("x is " + str(x))
             newHorizontal += horizontal
