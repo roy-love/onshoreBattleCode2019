@@ -55,11 +55,6 @@ class MyRobot(BCAbstractRobot):
     def turn(self):
         self.step += 1
 
-<<<<<<< HEAD
-=======
-        if self.step == 1:
-            self.mapLength = len(self.map)
->>>>>>> 0b63492a7a6248aa5a1c12661a790ef2613664ee
 
         if self.step % 1 == 0:
             #self.log("START TURN " + self.step)
@@ -77,7 +72,7 @@ class MyRobot(BCAbstractRobot):
                     engage = self.engageEnemyRobots(target)
                     if engage:
                         self.log("engaging robot " + str(target['bot']))
-                        return self.attack(self.me.x - target['location']['x'], self.me.y - target['location']['y'])
+                        return self.attack(target['location']['x'] - self.me.x, target['location']['y'] - self.me.y)
 
                 # move to target if possible
                 movement = self.getMovement()
@@ -281,7 +276,7 @@ class MyRobot(BCAbstractRobot):
 
     def getRangeToTarget(self, startPosition, targetPosition):
         """will return the radius squared distance |X1-X2|^2 + |Y1-Y2|^2 from the startPosition {'x': 1, 'y': 2} to the TargetPosition {'x': 4, 'y': 9}"""
-        return abs(startPosition['x'] - targetPosition['x'])**2 + abs(startPosition['y']-targetPosition['y'])**2
+        return (startPosition['x'] - targetPosition['x'])**2 + (startPosition['y']-targetPosition['y'])**2
 
     def findClosestTarget(self, enemyRobots):
         """will return the closest robot in the list of robots"""
@@ -308,9 +303,8 @@ class MyRobot(BCAbstractRobot):
         """Will engage the enemy if it is within robots range."""
         self.log("engaging enemys")
         enemyEngaged = False
-        if self.me['unit'] == SPECS['CRUSADER']:
-            if  self.attackRanges['crusaderMin'] <= targetRobot['distance'] <= self.attackRanges['crusaderMax']: 
-                enemyEngaged = True
+        if  SPECS.UNITS[this.me.unit].ATTACK_RADIUS[0] <= targetRobot['distance'] <= SPECS.UNITS[this.me.unit].ATTACK_RADIUS[1]: 
+            enemyEngaged = True
         return enemyEngaged
 
 robot = MyRobot()
