@@ -66,9 +66,10 @@ class MyRobot(BCAbstractRobot):
             self.mapLength = len(self.map)
             self.mapHeight = len(self.map[0])
             self.log("map length is " + str(self.mapLength) + " map height is " + str(self.mapHeight))
-            self.setDefenseGrid()
-            self.targetLocation = self.getStation()
-            self.log("my station is " + str(self.targetLocation))
+            if self.me['unit'] != SPECS['PILGRIM']:
+                self.setDefenseGrid()
+                self.targetLocation = self.getStation()
+                self.log("my station is " + str(self.targetLocation))
 
             # self.log("map length is " + str(self.mapLength) + " map height is " + str(self.mapHeight))
 
@@ -79,7 +80,7 @@ class MyRobot(BCAbstractRobot):
 
                 if not self.isCrusader:
                     self.isCrusader = True
-                    self.targetLocation = self.getRandomPassableLocation()
+                    # self.targetLocation = self.getRandomPassableLocation()
 
             #    self.log("Crusader health: " + str(self.me['health']))
 
@@ -103,14 +104,18 @@ class MyRobot(BCAbstractRobot):
                     randir = [-1, 0, 1]
                     firstdir = random.choice(randir)
                     seconddir = random.choice(randir)
-                    if self.pilgrims / self.prophets <= .5:
+                    if self.crusaders / self.pilgrims <= .5:
                        # self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.pilgrims += 1
-                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
-                    elif self.crusaders <= 1:
-                        # self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.crusaders += 1
                         return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
+                    elif self.prophets <= 2:
+                        # self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        self.prophets += 1
+                        return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
+                    elif self.pilgrims <= 3:
+                     #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        self.pilgrims += 1
+                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
                     else:
                      #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.prophets += 1
@@ -181,7 +186,7 @@ class MyRobot(BCAbstractRobot):
                     centerLocation = (centerPoint, centerPoint)
                     direction = self.getDirection(currentLocation, centerLocation)
                     # self.targetLocation = self.getTargetInDirection(currentLocation, direction, 5)
-                    self.targetLocation = self.getRandomPassableLocation()
+                    # self.targetLocation = self.getRandomPassableLocation()
                 # Attack closest target if possible
                 targets = self.getTargetRobots()
                 if len(targets) > 0:
