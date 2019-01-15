@@ -23,6 +23,8 @@ class MyRobot(BCAbstractRobot):
     # target location hard coded to 16,16 for now. set to None here to disable pathfinding until a target is set
     targetLocation = None
     resourceInSight = False
+    failedResourceSearchCount = 0
+    randomMovementCount = 0
     spawnLocation = None
     spawnCastleLocation = None
 
@@ -74,11 +76,10 @@ class MyRobot(BCAbstractRobot):
             # self.log("START STEP " + self.step)
 
             if self.me['unit'] == SPECS['CRUSADER']:
-                #if self.step == 0:
-                    #self.targetLocation = (16,16)
 
                 if not self.isCrusader:
                     self.isCrusader = True
+                    self.targetLocation = self.getRandomPassableLocation()
 
             #    self.log("Crusader health: " + str(self.me['health']))
 
@@ -102,18 +103,18 @@ class MyRobot(BCAbstractRobot):
                     randir = [-1, 0, 1]
                     firstdir = random.choice(randir)
                     seconddir = random.choice(randir)
-                    if self.crusaders / self.pilgrims <= .5:
+                    if self.pilgrims / self.prophets <= .5:
                        # self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.pilgrims += 1
                         return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
-                    elif self.prophets <= 5:
-                        self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.prophets += 1
-                        return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
-                    else:
-                     #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                    elif self.crusaders <= 1:
+                        # self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         self.crusaders += 1
                         return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
+                    else:
+                     #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        self.prophets += 1
+                        return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
                 else:
                   #  self.log("Castle health: " + self.me['health'])
                     pass
@@ -127,26 +128,34 @@ class MyRobot(BCAbstractRobot):
                         if robot['unit'] == SPECS['CASTLE']:
                             self.spawnCastleLocation = (robot['x'], robot['y'])
 
-                if self.targetLocation is None:
+                if self.failedResourceSearchCount == 10:
+                    self.targetLocation = self.getRandomPassableLocation()
+                    self.randomMovementCount += 1
+
+                    if self.randomMovementCount < 12:
+                        self.failedResourceSearchCount = 0
+
+                elif self.targetLocation is None or not self.resourceInSight:
                     # find nearest vacant karbonite or fuel
                     self.targetLocation = self.find_nearest(self.karbonite_map, currentLocation)
                     if self.targetLocation != (-1, -1):
                         self.resourceInSight = True
+                        self.failedResourceSearchCount = 0
                     else:
                         self.targetLocation = self.find_nearest(self.fuel_map, currentLocation)
                         if self.targetLocation != (-1, -1):
                             self.resourceInSight = True
-                elif not self.resourceInSight:
-                    # get a random direction to go to and check for resources again
-                    self.targetLocation = (16,16)
+                            self.failedResourceSearchCount = 0
+                        else:
+                            self.failedResourceSearchCount += 1
                             
-
                 if self.me['karbonite'] == SPECS['UNITS'][SPECS["PILGRIM"]]['KARBONITE_CAPACITY']:
                     # set target back to the castle and unload
                     self.targetLocation = self.spawnLocation
                     if self.spawnLocation == currentLocation:
                         directionToCastle = self.getDirection(currentLocation, self.spawnCastleLocation)
                         self.resourceInSight = False
+                        self.targetLocation = None
                         return self.give(directionToCastle[0], directionToCastle[1], self.me['karbonite'], self.me['fuel'])
                 elif self.me['fuel'] == SPECS['UNITS'][SPECS["PILGRIM"]]['FUEL_CAPACITY']:
                     # set target back to the castle and unload
@@ -171,7 +180,8 @@ class MyRobot(BCAbstractRobot):
                     centerPoint = math.ceil(self.mapLength / 2)
                     centerLocation = (centerPoint, centerPoint)
                     direction = self.getDirection(currentLocation, centerLocation)
-                    #self.targetLocation = self.getTargetInDirection(currentLocation, direction, 5)
+                    # self.targetLocation = self.getTargetInDirection(currentLocation, direction, 5)
+                    self.targetLocation = self.getRandomPassableLocation()
                 # Attack closest target if possible
                 targets = self.getTargetRobots()
                 if len(targets) > 0:
@@ -337,7 +347,7 @@ class MyRobot(BCAbstractRobot):
         y = currentLocation[1] + directionalMovement[1]
         return (x, y)
 
-    def isPassable(self, newLocation):
+    def isPassable(self, newLocation, includeRobots=True):
         """Will return whether a set of coordinates is on the map, passable, and not occupied by another robot"""
         passable = True
 
@@ -347,7 +357,7 @@ class MyRobot(BCAbstractRobot):
             passable = False
         elif not self.map[newLocation[1]][newLocation[0]]:
             passable = False
-        elif self.get_visible_robot_map()[newLocation[1]][newLocation[0]] > 0:
+        elif includeRobots and self.get_visible_robot_map()[newLocation[1]][newLocation[0]] > 0:
             passable = False
 
         return passable
@@ -364,6 +374,16 @@ class MyRobot(BCAbstractRobot):
         rotatedDirection = self.string_to_direction[rotatedDirectionString]
 
         return rotatedDirection
+
+    def getRandomPassableLocation(self):
+        randomX = random.randint(1, self.mapLength - 1)
+        randomY = random.randint(1, self.mapLength - 1)
+
+        while not self.isPassable((randomX, randomY), False):
+            randomX = random.randint(1, self.mapLength - 1)
+            randomY = random.randint(1, self.mapLength - 1)
+
+        return (randomX, randomY)
 
     def find_nearest(self, m, loc):
         closest_loc = (-1, -1)
@@ -382,13 +402,13 @@ class MyRobot(BCAbstractRobot):
 
     def getTargetRobots(self):
         """will return a list of visable enemy robots."""
-        #self.log("find targets")
+        # self.log("find targets")
         robots = self.get_visible_robots()
         enemyRobots = []
         if len(robots) > 0:
             for bot in robots:
-                #self.log("target bot team " + str(bot['team']))
-                #self.log("my team " + str(self.me['team']))
+                # self.log("target bot team " + str(bot['team']))
+                # self.log("my team " + str(self.me['team']))
                 if bot['team'] != self.me['team']:
                     self.log("adding bot to enemy list")
                     enemyRobots.append(bot)
@@ -400,7 +420,7 @@ class MyRobot(BCAbstractRobot):
 
     def findClosestTarget(self, enemyRobots):
         """will return the closest robot in the list of robots"""
-        #self.log("finding closest target")
+        # self.log("finding closest target")
         closest = {'target': None}
         myLoc = {'x': self.me['x'], 'y': self.me['y']}
         for bot in enemyRobots:
@@ -421,7 +441,7 @@ class MyRobot(BCAbstractRobot):
 
     def engageEnemyRobots(self, targetRobot):
         """Will engage the enemy if it is within robots range."""
-        #self.log("engaging enemys")
+        # self.log("engaging enemys")
         enemyEngaged = False
         if  SPECS.UNITS[self.me.unit].ATTACK_RADIUS[0] <= targetRobot['distance'] <= SPECS.UNITS[self.me.unit].ATTACK_RADIUS[1]: 
             enemyEngaged = True
