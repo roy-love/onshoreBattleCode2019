@@ -21,7 +21,10 @@ class MyRobot(BCAbstractRobot):
     isCrusader = False
 
     # target location hard coded to 16,16 for now. set to None here to disable pathfinding until a target is set
-    targetLocation = (16,16)
+    targetLocation = None
+    resourceInSight = False
+    spawnLocation = None
+    spawnCastleLocation = None
 
     direction_to_string = {
         (0,0): "C",
@@ -57,19 +60,26 @@ class MyRobot(BCAbstractRobot):
     def turn(self):
         self.step += 1
 
-        if self.step == 1:
+        if self.step == 0:
             self.mapLength = len(self.map)
             self.mapHeight = len(self.map[0])
+<<<<<<< HEAD
             self.log("map length is " + str(self.mapLength) + " map height is " + str(self.mapHeight))
             self.setDefenseGrid()
             self.targetLocation = self.getStation()
             self.log("my station is " + str(self.targetLocation))
 
+=======
+            # self.log("map length is " + str(self.mapLength) + " map height is " + str(self.mapHeight))
+>>>>>>> e5969e831453913c359345d6ba7b7689468e1b5a
 
         if self.step % 1 == 0:
             # self.log("START STEP " + self.step)
 
             if self.me['unit'] == SPECS['CRUSADER']:
+                if self.step == 0:
+                    self.targetLocation = (16,16)
+
                 if not self.isCrusader:
                     self.isCrusader = True
 
@@ -112,6 +122,46 @@ class MyRobot(BCAbstractRobot):
                     pass
             
             elif self.me['unit'] == SPECS['PILGRIM']:
+                currentLocation = (self.me['x'], self.me['y'])
+
+                if self.step == 0:
+                    self.spawnLocation = currentLocation
+                    for robot in self.get_visible_robots():
+                        if robot['unit'] == SPECS['CASTLE']:
+                            self.spawnCastleLocation = (robot['x'], robot['y'])
+
+                if self.targetLocation is None:
+                    # find nearest vacant karbonite or fuel
+                    self.targetLocation = self.find_nearest(self.karbonite_map, currentLocation)
+                    if self.targetLocation != (-1, -1):
+                        self.resourceInSight = True
+                    else:
+                        self.targetLocation = self.find_nearest(self.fuel_map, currentLocation)
+                        if self.targetLocation != (-1, -1):
+                            self.resourceInSight = True
+                elif not self.resourceInSight:
+                    # get a random direction to go to and check for resources again
+                    self.targetLocation = (16,16)
+                            
+
+                if self.me['karbonite'] == SPECS['UNITS'][SPECS["PILGRIM"]]['KARBONITE_CAPACITY']:
+                    # set target back to the castle and unload
+                    self.targetLocation = self.spawnLocation
+                    if self.spawnLocation == currentLocation:
+                        directionToCastle = self.getDirection(currentLocation, self.spawnCastleLocation)
+                        self.resourceInSight = False
+                        return self.give(directionToCastle[0], directionToCastle[1], self.me['karbonite'], self.me['fuel'])
+                elif self.me['fuel'] == SPECS['UNITS'][SPECS["PILGRIM"]]['FUEL_CAPACITY']:
+                    # set target back to the castle and unload
+                    self.targetLocation = self.spawnLocation
+                    if self.spawnLocation == currentLocation:
+                        directionToCastle = self.getDirection(currentLocation, self.spawnCastleLocation)
+                        self.resourceInSight = False
+                        self.targetLocation = None
+                        return self.give(directionToCastle[0], directionToCastle[1], self.me['karbonite'], self.me['fuel'])
+                elif self.karbonite_map[currentLocation[1]][currentLocation[0]] or self.fuel_map[currentLocation[1]][currentLocation[0]]:
+                    return self.mine()
+
                 # move to target if possible
                 movement = self.getMovement()
                 if movement != (0,0):
@@ -119,7 +169,7 @@ class MyRobot(BCAbstractRobot):
                     return self.move(*movement)
 
             elif self.me['unit'] == SPECS['PROPHET']:
-                if self.step == 1:
+                if self.step == 0:
                     currentLocation = (self.me['x'], self.me['y'])
                     centerPoint = math.ceil(self.mapLength / 2)
                     centerLocation = (centerPoint, centerPoint)
@@ -309,6 +359,21 @@ class MyRobot(BCAbstractRobot):
         rotatedDirection = self.string_to_direction[rotatedDirectionString]
 
         return rotatedDirection
+
+    def find_nearest(self, m, loc):
+        closest_loc = (-1, -1)
+        best_dist_sq = 64 * 64 + 64 * 64 + 1
+        for x in range(len(m)):
+            if (x - loc[0])**2 > best_dist_sq:
+                continue
+            for y in range(len(m[0])):
+                if (y - loc[1])**2 > best_dist_sq:
+                    continue
+                d = (x-loc[0]) ** 2 + (y-loc[1]) **2
+                if self.get_visible_robot_map()[y][x] == 0 and m[y][x] and d < best_dist_sq:
+                    best_dist_sq = d
+                    closest_loc = (x,y)
+        return closest_loc
 
     def getTargetRobots(self):
         """will return a list of visable enemy robots."""
