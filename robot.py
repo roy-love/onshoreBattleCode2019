@@ -186,11 +186,7 @@ class MyRobot(BCAbstractRobot):
                 # move to target if possible
                 movement = self.getMovement()
                 if movement != (0,0):
-                    if returningHome:
-                        return self.move(*movement)
-                    elif self.me.fuel > 100:
-                        #self.log("Moving in direction: " + str(movement))
-                        return self.move(*movement)
+                    return self.move(*movement)
 
             elif self.me['unit'] == SPECS['PROPHET']:
                 myCurrentLocation = (self.me['x'], self.me['y'])
@@ -494,10 +490,10 @@ class MyRobot(BCAbstractRobot):
             maxY = self.mapLength
         if minY < 0:
             minY = 0
-            self.log("horizontal is " + str(horizontal))
-            newHorizontal = horizontal
-            self.log("New Horizontal is ************************ " + str(newHorizontal))
-        while gridSize < 10:
+        self.log("horizontal is " + str(horizontal))
+        newHorizontal = horizontal
+        self.log("New Horizontal is ************************ " + str(newHorizontal))
+        while gridSize < 8:
             self.log("minx is " + str(minX))
             self.log("newHorizontal 2 is " + str(newHorizontal))
             x = (minX + newHorizontal)
@@ -506,7 +502,7 @@ class MyRobot(BCAbstractRobot):
             yGrid = 2
             gridSize += 2
             newVertical = vertical
-            while yGrid < 10:
+            while yGrid < 8:
                 y = (minY + newVertical)
                 self.log("x is " + str(x))
                 if x == x:
