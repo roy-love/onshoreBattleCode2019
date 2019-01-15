@@ -55,14 +55,11 @@ class MyRobot(BCAbstractRobot):
     def turn(self):
         self.step += 1
 
-<<<<<<< HEAD
-=======
         if self.step == 1:
             self.mapLength = len(self.map)
->>>>>>> 0b63492a7a6248aa5a1c12661a790ef2613664ee
 
         if self.step % 1 == 0:
-            #self.log("START TURN " + self.step)
+            # self.log("START STEP " + self.step)
 
             if self.me['unit'] == SPECS['CRUSADER']:
                 if not self.isCrusader:
@@ -133,112 +130,152 @@ class MyRobot(BCAbstractRobot):
         y = location[1] + direction[1] * amount
         return (x, y)
 
-    # will return (0,0) if there is no target location set, no available spaces within movement range, or if robot is already at the target location
     def getMovement(self):
+        """Will return the number of x and y blocks the robot will move, as a set of coordinates"""
+        # store the robot's current location and set the directional movement to 0,0 so that the robot won't move by default
         currentLocation = (self.me['x'], self.me['y'])
         directionalMovement = (0,0)
 
+        # ensure that target location is not none and not equal to the current location
         if self.targetLocation and not currentLocation == self.targetLocation:
 
+            # store the direction, directional movement, and the new map location we will trying to move the robot to this round
             direction = self.getDirection(currentLocation, self.targetLocation)
             directionalMovement = self.getDirectionalMovement(currentLocation, direction)
             newLocation = self.getNewLocation(currentLocation, directionalMovement)
+
+            # store the current direction for use later
             initialDirection = direction
+
+            # by default, the robot is ready to move in the event that the new map location is already passable
             readyToMove = True
 
+            # while the new map location is not passable
             while not self.isPassable(newLocation):
-                # rotate the robots direction clockwise and proceed
-                #TO DO determine when it makes more sense to go clockwise vs counter clockwise
-                direction = self.getRotatedDirection(direction, 1)
+                # if unit is a crusader moving diagonally at their fastest pace, set their directional movement to (1,1)
+                if self.isCrusader and directionalMovement[0] == 2 and directionalMovement[1] == 2:
+                    directionalMovement[0] = 1
+                    directionalMovement[1] = 1
+                # or if the unit is traveling faster than 1 block East
+                elif directionalMovement[0] > 1:
+                    # lower the unit's movement East by 1 block
+                    directionalMovement[0] -= 1
+                # or if the unit is traveling faster than 1 block West
+                elif directionalMovement[0] < -1:
+                    # lower the unit's movement West by 1 block
+                    directionalMovement[0] += 1
+                # or if the unit is traveling faster than 1 block South
+                elif directionalMovement[1] > 1:
+                    # lower the unit's movement South by 1 block
+                    directionalMovement[1] -= 1
+                # or if the unit is traveling faster than 1 block North
+                elif directionalMovement[1] < -1:
+                    # lower the unit's movement North by 1 block
+                    directionalMovement[1] += 1
+                # else the unit is already moving the shortest distance they can in the current direction
+                else:
+                    # rotate the robots direction clockwise and proceed
+                    direction = self.getRotatedDirection(direction, 1)
 
-                if direction == initialDirection:
-                 #   self.log("Was unable to find a direction to move in")
-                    readyToMove = False
-                    break
+                    # if we ened up facing the same direction we started in
+                    if direction == initialDirection:
+                        # let the code know we're not ready to move
+                        readyToMove = False
+                        # break out of the while loop
+                        break
 
-                directionalMovement = self.getDirectionalMovement(currentLocation, direction)
+                    # overwrite the directional movement with a new one based on the direction we just got
+                    directionalMovement = self.getDirectionalMovement(currentLocation, direction)
+
+                # overwrite the new location with the location we get from the directional movement we just got
                 newLocation = self.getNewLocation(currentLocation, directionalMovement)
 
+            # if the robot ended up not being ready to move
             if not readyToMove:
+                # change the directional movement back to (0,0) so that it doesn't move
                 directionalMovement = (0,0)
 
+        # return the directional movement
         return directionalMovement
 
     def getDirection(self, location, target):
-        # get direction to target
+        """Will return the direction as a set of coordinates"""
+        # store the distance from the target to the location as dx and dy
         dx = target[0] - location[0]
         dy = target[1] - location[1]
 
+        # if the x distance is less than 0, face West
         if dx < 0:
             dx = -1
+        # or if the x distance is greater than 0, face East
         elif dx > 0:
             dx = 1
 
+        # if the y distance is less than 0, face North
         if dy < 0:
             dy = -1
+        # or if the y distance is greater than 0, face South
         elif dy > 0:
             dy = 1
 
+        # return the direction as a set of coordinates
         return (dx, dy)
 
     def getDirectionalMovement(self, currentLocation, direction):
-        # get directional movement allowed towards target        
+        """Will return the number of x and y blocks the unit can move in the specified direction as a set of coordinates"""
+        # get the maximum diagonal vs single line movements based on the robot type
         if self.isCrusader:
+            # Crusader can move a maximum of 3 blocks in a single line and 2 blocks in a diagonal line
             singleLineMovementSpeed = 3
             diagonalMovementSpeed = 2
         else:
+            # all other units can move a maximum of 2 blocks in a single line and 1 block in a diagonal line
             singleLineMovementSpeed = 2
             diagonalMovementSpeed = 1
 
+        # set the x and y directional movements to the current direction's x and y. These will be used to store the maximum movement speed of the robot in a given direction
         xDirectionalMovement = direction[0]
         yDirectionalMovement = direction[1]
 
+        # if neither x or y are 0, then the unit is traveling diagonally so we multiply the values by the diagonal movement speed
         if xDirectionalMovement != 0 and yDirectionalMovement != 0:
             xDirectionalMovement *= diagonalMovementSpeed
             yDirectionalMovement *= diagonalMovementSpeed
         else:
+            # else we multiply the movement values by the single line movement speed
             xDirectionalMovement *= singleLineMovementSpeed
             yDirectionalMovement *= singleLineMovementSpeed
 
-        # limit the directional movement if target is closer than max movement range
+        # store the values of how far the current location is from the target location
         xOffset = self.targetLocation[0] - currentLocation[0]
         yOffset = self.targetLocation[1] - currentLocation[1]
 
+        # if the distance from 
         if self.isCrusader:
-            # TO DO Add logic to enhance Crusader movements
-            pass
-        else:
             if xDirectionalMovement != 0:
-                directionalMovement = (xDirectionalMovement, yDirectionalMovement)
-                xDirectionalMovement = self.checkForShorterAxisMovement(xOffset, xDirectionalMovement, directionalMovement, currentLocation)
-                    
+                if (xOffset > 0 and xOffset < 3) or (xOffset < 0 and xOffset > -3):
+                    xDirectionalMovement = xOffset
+
             if yDirectionalMovement != 0:
-                directionalMovement = (xDirectionalMovement, yDirectionalMovement)
-                yDirectionalMovement = self.checkForShorterAxisMovement(yOffset, yDirectionalMovement, directionalMovement, currentLocation)                
+                if (yOffset > 0 and yOffset < 3) or (yOffset < 0 and yOffset > -3):
+                    yDirectionalMovement = yOffset
+        else:
+            if xDirectionalMovement != 0 and (xOffset == 1 or xOffset == -1):
+                xDirectionalMovement = xOffset
+
+            if yDirectionalMovement != 0 and (yOffset == 1 or yOffset == -1):
+                yDirectionalMovement = yOffset
 
         return (xDirectionalMovement, yDirectionalMovement)
 
-    def checkForShorterAxisMovement(self, Offset, axisDirectionalMovement, directionalMovement, currentLocation):
-        # shorten directional movement by single increment if possible
-        if Offset == 1 or Offset == -1:
-            axisDirectionalMovement = Offset                                
-        elif axisDirectionalMovement > 1:
-            newLocation = self.getNewLocation(currentLocation, directionalMovement)
-            if not self.isPassable(newLocation):
-                axisDirectionalMovement = 1
-        elif axisDirectionalMovement < -1:
-            newLocation = self.getNewLocation(currentLocation, directionalMovement)
-            if not self.isPassable(newLocation):
-                axisDirectionalMovement = -1
-        
-        return axisDirectionalMovement
-
     def getNewLocation(self, currentLocation, directionalMovement):
+        """Will return the coordinates of the location reached after moving"""
         x = currentLocation[0] + directionalMovement[0]
         y = currentLocation[1] + directionalMovement[1]
         return (x, y)
 
     def isPassable(self, newLocation):
+        """Will return whether a set of coordinates is on the map, passable, and not occupied by another robot"""
         passable = True
 
         if newLocation[0] < 0 or newLocation[0] > len(self.map):
