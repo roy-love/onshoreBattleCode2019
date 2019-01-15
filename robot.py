@@ -55,11 +55,8 @@ class MyRobot(BCAbstractRobot):
     def turn(self):
         self.step += 1
 
-<<<<<<< HEAD
-=======
         if self.step == 1:
             self.mapLength = len(self.map)
->>>>>>> cf09979c11267b0b5233db84e13e01cc867efa3a
 
         if self.step % 1 == 0:
             # self.log("START STEP " + self.step)
@@ -348,7 +345,7 @@ class MyRobot(BCAbstractRobot):
         """Will engage the enemy if it is within robots range."""
         self.log("engaging enemys")
         enemyEngaged = False
-        if  SPECS.UNITS[this.me.unit].ATTACK_RADIUS[0] <= targetRobot['distance'] <= SPECS.UNITS[this.me.unit].ATTACK_RADIUS[1]: 
+        if  SPECS.UNITS[self.me.unit].ATTACK_RADIUS[0] <= targetRobot['distance'] <= SPECS.UNITS[self.me.unit].ATTACK_RADIUS[1]: 
             enemyEngaged = True
         return enemyEngaged
 
