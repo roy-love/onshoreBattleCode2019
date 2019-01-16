@@ -78,10 +78,10 @@ class MyRobot(BCAbstractRobot):
 
             if self.me['unit'] == SPECS['CRUSADER']:
                         # ensure that target location is not none and not equal to the current location
-                myCurrentLocation = (self.me['x'], self.me['y'])
-                if not (self.targetLocation and not myCurrentLocation == self.targetLocation):
-                    self.log("Setting new target because old one was bad")
-                    self.targetLocation = self.getRandomPassableLocation()
+                #myCurrentLocation = (self.me['x'], self.me['y'])
+                #if not (self.targetLocation and not myCurrentLocation == self.targetLocation):
+                    #self.log("Setting new target because old one was bad")
+                    #self.targetLocation = self.getRandomPassableLocation()
 
                 if not self.isCrusader:
                     self.isCrusader = True
@@ -189,10 +189,10 @@ class MyRobot(BCAbstractRobot):
                     return self.move(*movement)
 
             elif self.me['unit'] == SPECS['PROPHET']:
-                myCurrentLocation = (self.me['x'], self.me['y'])
-                if not (self.targetLocation and not myCurrentLocation == self.targetLocation):
-                    self.log("Setting new target because old one was bad")
-                    self.targetLocation = self.getRandomPassableLocation()
+                #myCurrentLocation = (self.me['x'], self.me['y'])
+                #if not (self.targetLocation and not myCurrentLocation == self.targetLocation):
+                    #self.log("Setting new target because old one was bad")
+                    #self.targetLocation = self.getRandomPassableLocation()
                 if self.step == 0:
                     currentLocation = (self.me['x'], self.me['y'])
                     centerPoint = math.ceil(self.mapLength / 2)
