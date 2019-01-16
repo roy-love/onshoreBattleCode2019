@@ -106,26 +106,189 @@ class MyRobot(BCAbstractRobot):
 
             elif self.me['unit'] == SPECS['CASTLE']:
                 if self.karbonite >= 20:
-                    randir = [-1, 0, 1]
-                    ranChance = [False, True]
-                    firstdir = random.choice(randir)
-                    seconddir = random.choice(randir)
+                    x = self.me['x']
+                    y = self.me['y']
+                    
                     if self.pilgrims <= 2:
-                     #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.pilgrims += 1
-                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
+                        if self.isPassable((x + 1, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 1, 0)
+
+                        elif self.isPassable((x + 1, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 1, 1)
+
+                        elif self.isPassable((x, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']+1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 0, 1)
+
+                        elif self.isPassable((x - 1, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], -1, 0)
+
+                        elif self.isPassable((x - 1, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']+1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], -1, 1)
+
+                        elif self.isPassable((x, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']-1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 0, -1)
+
+                        elif self.isPassable((x + 1, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']-1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 1, -1)
+
+                        elif self.isPassable((x - 1, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']-1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], -1, -1)
+
+                        elif self.isPassable((x, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 0, 0)
                     elif self.crusaders / self.pilgrims <= .5:
-                       # self.log("Building a crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.crusaders += 1
-                        return self.build_unit(SPECS['CRUSADER'], firstdir, seconddir)
+                        if self.isPassable((x + 1, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], 1, 0)
+
+                        elif self.isPassable((x + 1, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], 1, 1)
+
+                        elif self.isPassable((x, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']+1))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], 0, 1)
+
+                        elif self.isPassable((x - 1, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], -1, 0)
+
+                        elif self.isPassable((x - 1, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']+1))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], -1, 1)
+
+                        elif self.isPassable((x, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']-1))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], 0, -1)
+
+                        elif self.isPassable((x + 1, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']-1))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], 1, -1)
+
+                        elif self.isPassable((x - 1, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']-1))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], -1, -1)
+
+                        elif self.isPassable((x, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']))
+                            self.crusaders += 1
+                            return self.build_unit(SPECS['CRUSADER'], 0, 0)
                     elif self.prophets <= 2:
-                        # self.log("building a prophet at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.prophets += 1
-                        return self.build_unit(SPECS['PROPHET'], firstdir, seconddir)
+                        if self.isPassable((x + 1, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], 1, 0)
+
+                        elif self.isPassable((x + 1, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], 1, 1)
+
+                        elif self.isPassable((x, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']+1))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], 0, 1)
+
+                        elif self.isPassable((x - 1, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], -1, 0)
+
+                        elif self.isPassable((x - 1, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']+1))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], -1, 1)
+
+                        elif self.isPassable((x, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']-1))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], 0, -1)
+
+                        elif self.isPassable((x + 1, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']-1))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], 1, -1)
+
+                        elif self.isPassable((x - 1, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']-1))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], -1, -1)
+
+                        elif self.isPassable((x, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']))
+                            self.prophets += 1
+                            return self.build_unit(SPECS['PROPHET'], 0, 0)
                     else:
-                     #   self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                        self.pilgrims += 1
-                        return self.build_unit(SPECS['PILGRIM'], firstdir, seconddir)
+                        if self.isPassable((x + 1, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 1, 0)
+
+                        elif self.isPassable((x + 1, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 1, 1)
+
+                        elif self.isPassable((x, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']+1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 0, 1)
+
+                        elif self.isPassable((x - 1, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], -1, 0)
+
+                        elif self.isPassable((x - 1, y + 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']+1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], -1, 1)
+
+                        elif self.isPassable((x, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']-1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 0, -1)
+
+                        elif self.isPassable((x + 1, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']-1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 1, -1)
+
+                        elif self.isPassable((x - 1, y - 1)):
+                            # self.log("building a pilgrim at " + str(self.me['x']-1) + ", " + str(self.me['y']-1))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], -1, -1)
+
+                        elif self.isPassable((x, y)):
+                            # self.log("building a pilgrim at " + str(self.me['x']) + ", " + str(self.me['y']))
+                            self.pilgrims += 1
+                            return self.build_unit(SPECS['PILGRIM'], 0, 0)
                 else:
                   #  self.log("Castle health: " + self.me['health'])
                     pass
